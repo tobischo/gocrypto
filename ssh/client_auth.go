@@ -407,7 +407,12 @@ func confirmKeyAck(key PublicKey, algo string, c packetConn) (bool, error) {
 			if err := Unmarshal(packet, &msg); err != nil {
 				return false, err
 			}
-			if msg.Algo != algo || !bytes.Equal(msg.PubKey, pubKey) {
+			// if msg.Algo != algo || !bytes.Equal(msg.PubKey, pubKey) {
+			// Some SSH servers do not respond with the approviate given algorithm that
+			// was selected based on the server-sig-algs.
+			// We therefore want to accept any algorithm that is acceptable to us.
+			keyAlgos := algorithmsForKeyFormat(key.Type())
+			if !contains(keyAlgos, msg.Algo) || !bytes.Equal(msg.PubKey, pubKey) {
 				return false, nil
 			}
 			return true, nil
